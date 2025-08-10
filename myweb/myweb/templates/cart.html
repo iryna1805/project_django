@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %} cart {% endblock %}
+{% block content %}
+<h2 style="text-align: center; color: #186b0a;">Мій кошик:</h2>
+
+{% if cart_items %}
+<table border="0" cellpadding="10" cellspacing="0" style="
+    border-collapse: separate; 
+    border-spacing: 0; 
+    width: 90%; max-width: 800px; 
+    margin: 20px auto; 
+    background-color: #bfdff8; 
+    border: 1px solid #ddd; 
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(3, 233, 64, 0.1);
+">
+    <thead>
+        <tr style="background-color: #3498db; color: white; font-weight: bold; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+            <th style="text-align: left; border-top-left-radius: 10px;">Товар</th>
+            <th style="text-align: center;">Кількість</th>
+            <th style="text-align: right;">Ціна (грн)</th>
+            <th style="text-align: right;">Загальна ціна (грн)</th>
+            <th style="text-align: center; border-top-right-radius: 10px;">Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for item in cart_items %}
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td>{{ item.product.name }}</td>
+            <td style="text-align: center;">
+                <a href="{% url 'update_quantity' item.id 'decrease' %}" style="text-decoration: none; font-weight: bold; font-size: 18px; margin-right: 5px; color: #2980b9;">−</a>
+                {{ item.quantity }}
+                <a href="{% url 'update_quantity' item.id 'increase' %}" style="text-decoration: none; font-weight: bold; font-size: 18px; margin-left: 5px; color: #2980b9;">+</a>
+            </td>
+            <td style="text-align: right;">{{ item.product.price }}</td>
+            <td style="text-align: right;">{{ item.get_total_price }}</td>
+            <td style="text-align: center;">
+                <a href="{% url 'remove_from_cart' item.id %}" style="color: #e74c3c; text-decoration: none; font-weight: bold;">Видалити</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<p style="text-align: right; max-width: 800px; margin: 15px auto 0 auto; font-weight: bold; font-size: 18px; color: #52f601;">
+    Всього: {{ total }} грн
+</p>
+
+{% else %}
+<p style="text-align: center; font-style: italic; color: #7f8c8d;">Кошик порожній</p>
+{% endif %}
+
+{% endblock %}

@@ -1,8 +1,8 @@
 import json
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import RegisterForm, LoginForm
-from .models import UserProfile, Product, Cart
+from .models import UserProfile, Product, Cart, CustomUser
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate
@@ -37,6 +37,60 @@ def login_view(request):
 @login_required
 def profile(request):
     return render(request, 'profile.html', {'name': request.user.username, 'email': request.user.email})
+
+def add_to_cart(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('login_view')
+
+    product = get_object_or_404(Product, id=product_id)
+    cart_item, created = Cart.objects.get_or_create(user=request.user, product=product)
+
+    if not created:
+        cart_item.quantity += 1
+    cart_item.save()
+    
+    return redirect('cart_view')
+
+def remove_from_cart(request, cart_item_id):
+    cart_item = get_object_or_404(Cart, id=cart_item_id, user=request.user)
+    cart_item.delete()
+    return redirect('cart_view')
+
+def update_quantity(request, cart_item_id, action):
+    cart_item = get_object_or_404(Cart, id=cart_item_id, user=request.user)
+
+    if action == "increase":
+        cart_item.quantity += 1
+    elif action == "decrease" and cart_item.quantity > 1:
+        cart_item.quantity -= 1
+    cart_item.save()
+
+    return redirect('cart_view')
+
+def cart_view(request):
+    if not request.user.is_authenticated:
+        return redirect('login_view')
+
+    cart_items = Cart.objects.filter(user=request.user)
+    total = sum(item.get_total_price() for item in cart_items)
+    return render(request, 'cart.html', {'cart_items': cart_items, 'total': total})
+
+
+
+def fix_cart_users(request):
+    user = CustomUser.objects.get(id=1)
+    
+    carts_without_user = Cart.objects.filter(user__isnull=True)
+    for cart in carts_without_user:
+        cart.user = user
+        cart.save()
+    
+    return HttpResponse(f"Updated {carts_without_user.count()} cart items")
+
+
+
+
+
 
 def logout_view(request):
     logout(request)

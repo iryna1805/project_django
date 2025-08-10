@@ -13,7 +13,10 @@
                     <h3>{{ product.name }}</h3>
                     <p>{{ product.description }}</p>
                     <p class="price">{{ product.price }}</p>
-                    <button class="btn btn-primary">Купити</button>
+                    <button class="btn btn-primary">
+                        <a href="{% url 'add_to_cart' product.id %}" style="color: rgb(156, 207, 244);">Купити</a>
+                    </button>
+                    </html>
                 </div>
             </div>
         </div>
