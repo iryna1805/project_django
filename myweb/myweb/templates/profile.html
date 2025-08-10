@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %} profile {% endblock %}
+
+{% block content %}
+
+
+<h1>Welcome: {{ name }}</h1>
+<p>Email: {{ email }}</p>
+<button class="btn btn-primary" onclick="togglePasswordBox()">Замінити пароль</button>
+<div class="password-box" id="passwordBox" style="display: none;">
+    <form method="POST">
+        {% csrf_token %}
+        <h3>Заміна паролю</h3>
+        <input type="password" id="oldPassword" placeholder="oldPassword" class="form-control">
+        <input type="password" id="newPassword" placeholder="newPassword" class="form-control">
+        <input type="password" id="confirmPassword" placeholder="confirmPassword" class="form-control">
+        <button class="btn btn-success" onclick="changePassword()">Підтвердити</button>
+        <p id="passwordMessage" style="color: red;"></p>
+    </form>
+</div>
+<a href="{% url 'logout_view' %}" class="btn btn-danger">Exit</a>
+
+<style>
+    .password-box {
+        margin-top: 20px;
+        padding: 15px;
+        border: 2px solid black;
+        border-radius: 5px;
+        background: #e6e6ff;
+    }
+</style>
+<script>
+    function togglePasswordBox(){
+        var box = document.getElementById('passwordBox');
+        box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+    }
+
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    async function changePassword(){
+        var oldPassword = document.getElementById('oldPassword');
+        var newPassword = document.getElementById('newPassword');
+        var confirmPassword = document.getElementById('confirmPassword');
+        var messagesBox = document.getElementById('passwordMessage');
+
+        if (!oldPassword.value || !newPassword.value || !confirmPassword.value) {
+            messagesBox.innerText = '⚠️ Всі поля мають бути заповнені';
+            return;
+        }
+
+        if (newPassword.value !== confirmPassword.value){
+            messagesBox.innerText = '⚠️ Паролі не співпадають';
+            return;
+        }
+
+        if (newPassword.value.length < 8) {
+            messagesBox.innerText = '⚠️ Пароль має бути не менше 8 символів';
+            return;
+        }
+
+        try {
+            let response = await fetch("{% url 'change_password' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    oldPassword: oldPassword.value,
+                    newPassword: newPassword.value
+                })
+            });
+
+            let data = await response.json();
+            if (response.ok) {
+                messagesBox.style.color = "green";
+                messagesBox.innerText = "✅ Пароль успішно змінений";
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                messagesBox.style.color = "red";
+                messagesBox.innerText = "⚠️ " + (data.error || "Помилка зміни пароля");
+            }
+        } catch (error) {
+            messagesBox.innerText = "⚠️ Помилка сервера!";
+        }
+    }
+</script>
+
+{% endblock %} 
