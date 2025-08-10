@@ -34,6 +34,19 @@ def login_view(request):
                 return redirect('home')
     return render(request, 'login.html', {'form': form})
 
+def products_json(request):
+    products = Product.objects.all()
+    data = []
+    for product in products:
+        data.append({
+            'id': product.id,
+            'name': product.name,
+            'price': str(product.price),  # decimal to string для JSON
+            'description': product.description,
+            'image_url': product.image_url,
+        })
+    return JsonResponse({'products': data})
+
 @login_required
 def profile(request):
     return render(request, 'profile.html', {'name': request.user.username, 'email': request.user.email})
